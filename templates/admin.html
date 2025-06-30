@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin - Attendance App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen p-6">
+
+  <div class="max-w-5xl mx-auto bg-white p-8 rounded shadow">
+    <h1 class="text-3xl font-bold text-center mb-6">Admin Panel</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="mb-4">
+          {% for category, message in messages %}
+            <div class="p-2 rounded text-white mb-1
+              {% if category == 'success' %}bg-green-500
+              {% elif category == 'danger' %}bg-red-500
+              {% elif category == 'warning' %}bg-yellow-400
+              {% else %}bg-blue-500
+              {% endif %}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <div class="mb-6 flex justify-between items-center">
+      <div>
+        <a href="{{ url_for('admin_stats') }}" class="text-blue-700 underline mr-4">View Stats</a>
+        <a href="{{ url_for('admin_assign') }}" class="text-blue-700 underline">Assign Admin</a>
+      </div>
+      <a href="{{ url_for('logout') }}" class="text-red-600 underline">Logout</a>
+    </div>
+
+    <table class="min-w-full border border-gray-300 rounded">
+      <thead>
+        <tr class="bg-gray-200">
+          <th class="border border-gray-300 px-4 py-2">User ID</th>
+          <th class="border border-gray-300 px-4 py-2">Email</th>
+          <th class="border border-gray-300 px-4 py-2">Gender</th>
+          <th class="border border-gray-300 px-4 py-2">Children</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in attendance_details %}
+          <tr class="hover:bg-gray-100">
+            <td class="border border-gray-300 px-4 py-2">{{ user.id }}</td>
+            <td class="border border-gray-300 px-4 py-2">{{ user.email }}</td>
+            <td class="border border-gray-300 px-4 py-2">{{ user.gender }}</td>
+            <td class="border border-gray-300 px-4 py-2">
+              {% if user.children %}
+                <ul>
+                  {% for child in user.children %}
+                    <li>{{ child.name }} ({{ child.gender }})</li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                None
+              {% endif %}
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="4" class="text-center p-4">No attendance marked today.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</body>
+</html>

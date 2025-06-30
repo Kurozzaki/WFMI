@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Stats - Attendance App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen p-6">
+
+  <div class="max-w-3xl mx-auto bg-white p-8 rounded shadow text-center">
+    <h1 class="text-3xl font-bold mb-6">Attendance Stats</h1>
+
+    <div class="grid grid-cols-2 gap-6 mb-8 text-lg">
+      <div class="bg-green-100 p-4 rounded">
+        <strong>Males (Adults):</strong> {{ males }}
+      </div>
+      <div class="bg-pink-100 p-4 rounded">
+        <strong>Females (Adults):</strong> {{ females }}
+      </div>
+      <div class="bg-blue-100 p-4 rounded">
+        <strong>Boys (Children):</strong> {{ boys }}
+      </div>
+      <div class="bg-purple-100 p-4 rounded">
+        <strong>Girls (Children):</strong> {{ girls }}
+      </div>
+    </div>
+
+    <h2 class="text-2xl font-semibold mb-4">Total individuals:</h2>
+    <p class="text-4xl font-extrabold">{{ total }}</p>
+
+    <div class="mt-8">
+      <a href="{{ url_for('admin') }}" class="text-blue-700 underline mr-4">Back to Admin Panel</a>
+      <a href="{{ url_for('admin_export') }}" class="text-green-700 underline">Export CSV</a>
+    </div>
+  </div>
+
+</body>
+</html>

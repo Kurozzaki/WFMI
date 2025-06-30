@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Attendance - Attendance App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    function toggleChildrenFields() {
+      const val = document.querySelector('input[name="have_children"]:checked').value;
+      const container = document.getElementById('children-fields');
+      if (val === 'yes') {
+        container.style.display = 'block';
+      } else {
+        container.style.display = 'none';
+      }
+    }
+
+    function addChildField() {
+      const container = document.getElementById('children-list');
+      const count = container.children.length + 1;
+
+      const div = document.createElement('div');
+      div.className = 'flex gap-2 mb-2 items-center';
+
+      const nameInput = document.createElement('input');
+      nameInput.type = 'text';
+      nameInput.name = `child_name_${count}`;
+      nameInput.placeholder = 'Child Name';
+      nameInput.required = true;
+      nameInput.className = 'border border-gray-300 rounded px-3 py-2 flex-1';
+
+      const genderSelect = document.createElement('select');
+      genderSelect.name = `child_gender_${count}`;
+      genderSelect.required = true;
+      genderSelect.className = 'border border-gray-300 rounded px-3 py-2';
+
+      const optionDefault = document.createElement('option');
+      optionDefault.value = '';
+      optionDefault.textContent = 'Gender';
+      optionDefault.disabled = true;
+      optionDefault.selected = true;
+
+      const optionBoy = document.createElement('option');
+      optionBoy.value = 'Boy';
+      optionBoy.textContent = 'Boy';
+
+      const optionGirl = document.createElement('option');
+      optionGirl.value = 'Girl';
+      optionGirl.textContent = 'Girl';
+
+      genderSelect.appendChild(optionDefault);
+      genderSelect.appendChild(optionBoy);
+      genderSelect.appendChild(optionGirl);
+
+      div.appendChild(nameInput);
+      div.appendChild(genderSelect);
+
+      container.appendChild(div);
+    }
+
+    window.onload = () => {
+      document.querySelectorAll('input[name="have_children"]').forEach(radio => {
+        radio.addEventListener('change', toggleChildrenFields);
+      });
+      toggleChildrenFields();
+    };
+  </script>
+</head>
+<body class="bg-gradient-to-r from-yellow-300 via-green-300 to-blue-400 min-h-screen flex flex-col items-center justify-center p-6">
+
+  <div class="bg-white bg-opacity-90 p-8 rounded-lg shadow-lg w-full max-w-lg">
+    <h1 class="text-3xl font-bold text-center text-green-700 mb-6">Attendance</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="mb-4">
+          {% for category, message in messages %}
+            <div class="p-2 rounded text-white mb-1
+              {% if category == 'success' %}bg-green-500
+              {% elif category == 'danger' %}bg-red-500
+              {% elif category == 'warning' %}bg-yellow-400
+              {% else %}bg-blue-500
+              {% endif %}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <p class="mb-4 text-center">Hello, <strong>{{ user_id }}</strong> ({{ user_gender }})</p>
+
+    <form method="POST" class="flex flex-col gap-4">
+
+      <p class="font-semibold">Have children to mark attendance for?</p>
+      <div class="flex gap-4 mb-4">
+        <label><input type="radio" name="have_children" value="yes" required /> Yes</label>
+        <label><input type="radio" name="have_children" value="no" required checked /> No</label>
+      </div>
+
+      <div id="children-fields" style="display:none;">
+        <div id="children-list" class="mb-2"></div>
+        <button type="button" onclick="addChildField()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded mb-4">Add Child</button>
+      </div>
+
+      <button type="submit" class="bg-green-600 hover:bg-green-700 text-white rounded py-2 font-semibold">Mark Attendance</button>
+    </form>
+
+    <p class="mt-6 text-center"><a href="{{ url_for('logout') }}" class="text-red-600 underline">Logout</a></p>
+  </div>
+
+</body>
+</html>
