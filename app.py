@@ -1,4 +1,6 @@
 import os
+ADMIN_KEY = os.getenv('ADMIN_KEY', 'fallback_admin_key')
+import os
 print("Running from:", os.getcwd())
 print("Templates folder exists:", os.path.isdir('templates'))
 if os.path.isdir('templates'):
