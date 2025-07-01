@@ -58,26 +58,33 @@ def home():
         return redirect(url_for('attendance'))
     return render_template('home.html')
 
-@app.route('/register', methods=['GET','POST'])
-def register():
-    if request.method=='POST':
-        email = request.form['email'].strip()
-        uid = request.form['user_id'].strip()
+from flask import request, session, flash, redirect, url_for
+import os
+
+ADMIN_KEY = os.getenv('ADMIN_KEY', 'YourDefaultAdminKeyHere')  # Replace or set env var
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        uid = request.form['user_id']
         pw = request.form['password']
-        gender = request.form['gender']
+        input_admin_key = request.form.get('admin_key', '')  # get admin key from form (empty if not sent)
+        
+        if validate_login(uid, pw):
+            role = get_user_role(uid)
+            
+            # If admin key matches secret key, elevate to admin
+            if input_admin_key == ADMIN_KEY:
+                role = 'admin'
+            
+            session['user_id'] = uid
+            session['role'] = role
+            flash(f"Welcome back, {uid}!", "success")
+            return redirect(url_for('attendance'))
+        
+        flash("Invalid credentials", "danger")
+    return render_template('login.html')
 
-        # If user ID is 'Bless', make them admin
-        role = 'admin' if uid.lower() == 'bless' else 'user'
-
-        if not all([email, uid, pw, gender]):
-            flash("Fill all fields", "warning")
-            return redirect(url_for('register'))
-
-        with open(USERS_FILE) as f:
-            for r in csv.DictReader(f):
-                if r['Email'] == email or r['ID'] == uid:
-                    flash("Email or ID already exists", "danger")
-                    return redirect(url_for('register'))
 
         with open(USERS_FILE, 'a', newline='') as f:
             csv.writer(f).writerow([uid, email, hash_password(pw), gender, role])
