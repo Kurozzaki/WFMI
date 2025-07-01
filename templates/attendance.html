@@ -7,7 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     function toggleChildrenFields() {
-      const val = document.querySelector('input[name="have_children"]:checked').value;
+      const val = document.querySelector('input[name="have_children"]:checked')?.value;
       const container = document.getElementById('children-fields');
       if (val === 'yes') {
         container.style.display = 'block';
@@ -91,24 +91,54 @@
 
     <p class="mb-4 text-center">Hello, <strong>{{ user_id }}</strong> ({{ user_gender }})</p>
 
-    <form method="POST" class="flex flex-col gap-4">
+    {% if step == 'mark_parent' %}
+      <form method="POST" class="flex flex-col gap-4">
+        <input type="hidden" name="step" value="mark_parent" />
+        <p class="text-center font-semibold mb-4">Mark your attendance for today</p>
+        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white rounded py-2 font-semibold">Mark Attendance</button>
+      </form>
 
-      <p class="font-semibold">Have children to mark attendance for?</p>
-      <div class="flex gap-4 mb-4">
-        <label><input type="radio" name="have_children" value="yes" required /> Yes</label>
-        <label><input type="radio" name="have_children" value="no" required checked /> No</label>
-      </div>
+    {% elif step == 'ask_children' %}
+      <form method="POST" class="flex flex-col gap-4">
+        <input type="hidden" name="step" value="ask_children" />
+        <p class="font-semibold">Do you have children to mark attendance for?</p>
+        <div class="flex gap-4 mb-4">
+          <label><input type="radio" name="have_children" value="yes" required /> Yes</label>
+          <label><input type="radio" name="have_children" value="no" required checked /> No</label>
+        </div>
+        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white rounded py-2 font-semibold">Continue</button>
+      </form>
 
-      <div id="children-fields" style="display:none;">
-        <div id="children-list" class="mb-2"></div>
+    {% elif step == 'enter_children' %}
+      <form method="POST" class="flex flex-col gap-4">
+        <input type="hidden" name="step" value="submit_children" />
+        <p class="font-semibold mb-4">Enter your children's names and genders</p>
+
+        <div id="children-list" class="mb-4">
+          {% for child in children %}
+            <div class="flex gap-2 mb-2 items-center">
+              <input type="text" name="child_name_{{ loop.index }}" value="{{ child.ChildName }}" required
+                class="border border-gray-300 rounded px-3 py-2 flex-1" />
+              <select name="child_gender_{{ loop.index }}" required
+                class="border border-gray-300 rounded px-3 py-2">
+                <option value="" disabled>Select Gender</option>
+                <option value="Boy" {% if child.Gender == 'Boy' %}selected{% endif %}>Boy</option>
+                <option value="Girl" {% if child.Gender == 'Girl' %}selected{% endif %}>Girl</option>
+              </select>
+            </div>
+          {% endfor %}
+        </div>
+
         <button type="button" onclick="addChildField()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded mb-4">Add Child</button>
-      </div>
 
-      <button type="submit" class="bg-green-600 hover:bg-green-700 text-white rounded py-2 font-semibold">Mark Attendance</button>
-    </form>
+        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white rounded py-2 font-semibold">Submit Children</button>
+      </form>
 
-    <p class="mt-6 text-center"><a href="{{ url_for('logout') }}" class="text-red-600 underline">Logout</a></p>
+    {% elif step == 'thank_you' %}
+      <p class="text-center text-xl font-semibold text-green-700">Thank you for marking your attendance!</p>
+      <p class="mt-6 text-center"><a href="{{ url_for('logout') }}" class="text-red-600 underline">Logout</a></p>
+    {% endif %}
+
   </div>
-
 </body>
 </html>

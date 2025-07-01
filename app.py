@@ -1,3 +1,9 @@
+import os
+print("Running from:", os.getcwd())
+print("Templates folder exists:", os.path.isdir('templates'))
+if os.path.isdir('templates'):
+    print("Templates contents:", os.listdir('templates'))
+
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file
 import csv, os, hashlib, io, qrcode
 from datetime import datetime, date
@@ -58,11 +64,14 @@ def register():
         pw = request.form['password']
         gender = request.form['gender']
         role = request.form.get('role','user')
-        if not all([email, uid, pw, gender]): flash("Fill all fields", "warning"); return redirect(url_for('register'))
+        if not all([email, uid, pw, gender]): 
+            flash("Fill all fields", "warning")
+            return redirect(url_for('register'))
         with open(USERS_FILE) as f:
             for r in csv.DictReader(f):
                 if r['Email']==email or r['ID']==uid:
-                    flash("Email or ID already exists", "danger"); return redirect(url_for('register'))
+                    flash("Email or ID already exists", "danger")
+                    return redirect(url_for('register'))
         with open(USERS_FILE,'a',newline='') as f:
             csv.writer(f).writerow([uid,email,hash_password(pw),gender,role])
         flash("Registered! Your ID: "+uid, "success")
@@ -83,22 +92,28 @@ def login():
 
 @app.route('/logout')
 def logout():
-    session.clear(); flash("Logged out", "info")
+    session.clear()
+    flash("Logged out", "info")
     return redirect(url_for('home'))
 
 @app.route('/attendance', methods=['GET','POST'])
 def attendance():
-    if 'user_id' not in session: flash("Login first", "warning"); return redirect(url_for('login'))
+    if 'user_id' not in session:
+        flash("Login first", "warning")
+        return redirect(url_for('login'))
     uid = session['user_id']
     children_saved = []
     with open(CHILDREN_FILE) as f:
         for r in csv.DictReader(f):
-            if r['ParentID']==uid: children_saved.append(r)
+            if r['ParentID']==uid:
+                children_saved.append(r)
 
     if request.method=='POST':
         step = request.form['step']
         if step=='mark_parent':
-            if has_parent_marked_today(uid): flash("Already marked today", "info"); return redirect(url_for('attendance'))
+            if has_parent_marked_today(uid):
+                flash("Already marked today", "info")
+                return redirect(url_for('attendance'))
             ts=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             with open(ATTENDANCE_FILE,'a',newline='') as f:
                 csv.writer(f).writerow([uid,ts,''])
@@ -111,7 +126,8 @@ def attendance():
             genders = request.form.getlist('child_gender')
             existing = {c['ChildName'] for c in children_saved}
             with open(CHILDREN_FILE,'a',newline='') as cf, open(ATTENDANCE_FILE,'a',newline='') as af:
-                cw=csv.writer(cf); aw=csv.writer(af)
+                cw=csv.writer(cf)
+                aw=csv.writer(af)
                 for n,g in zip(names,genders):
                     if n and n not in existing:
                         cw.writerow([uid,n,g])
@@ -122,7 +138,9 @@ def attendance():
 
 @app.route('/admin')
 def admin():
-    if session.get('role')!='admin': flash("Admin only", "danger"); return redirect(url_for('login'))
+    if session.get('role')!='admin':
+        flash("Admin only", "danger")
+        return redirect(url_for('login'))
     rec=[]
     with open(ATTENDANCE_FILE) as f:
         rec=list(csv.DictReader(f))
@@ -131,9 +149,47 @@ def admin():
 @app.route('/qr')
 def qr_code():
     img=qrcode.make(url_for('attendance',_external=True))
-    buf=io.BytesIO(); img.save(buf); buf.seek(0)
+    buf=io.BytesIO()
+    img.save(buf)
+    buf.seek(0)
     return send_file(buf, mimetype='image/png')
 
-if __name__=='__main__':
+# --------- NEW ADMIN ASSIGN SECTION ---------
+
+def update_user_role(user_id, new_role):
+    users = []
+    with open(USERS_FILE, newline='') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            if row['ID'] == user_id:
+                row['Role'] = new_role
+            users.append(row)
+    with open(USERS_FILE, 'w', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=['ID','Email','PasswordHash','Gender','Role'])
+        writer.writeheader()
+        writer.writerows(users)
+
+@app.route('/admin/assign', methods=['GET', 'POST'])
+def admin_assign():
+    if session.get('role') != 'admin':
+        flash("Admin only", "danger")
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        user_id = request.form.get('user_id')
+        new_role = request.form.get('role')
+        if user_id and new_role in ['user', 'admin']:
+            update_user_role(user_id, new_role)
+            flash(f"Updated role of user {user_id} to {new_role}", "success")
+        else:
+            flash("Invalid input", "danger")
+        return redirect(url_for('admin_assign'))
+
+    users = []
+    with open(USERS_FILE, newline='') as f:
+        users = list(csv.DictReader(f))
+    return render_template('admin_assign.html', users=users)
+
+if __name__ == '__main__':
     initialize_files()
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0')
