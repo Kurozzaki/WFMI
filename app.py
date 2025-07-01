@@ -63,20 +63,28 @@ def register():
         uid = request.form['user_id'].strip()
         pw = request.form['password']
         gender = request.form['gender']
-        role = request.form.get('role','user')
-        if not all([email, uid, pw, gender]): 
+
+        # If user ID is 'Bless', make them admin
+        role = 'admin' if uid.lower() == 'bless' else 'user'
+
+        if not all([email, uid, pw, gender]):
             flash("Fill all fields", "warning")
             return redirect(url_for('register'))
+
         with open(USERS_FILE) as f:
             for r in csv.DictReader(f):
-                if r['Email']==email or r['ID']==uid:
+                if r['Email'] == email or r['ID'] == uid:
                     flash("Email or ID already exists", "danger")
                     return redirect(url_for('register'))
-        with open(USERS_FILE,'a',newline='') as f:
-            csv.writer(f).writerow([uid,email,hash_password(pw),gender,role])
-        flash("Registered! Your ID: "+uid, "success")
+
+        with open(USERS_FILE, 'a', newline='') as f:
+            csv.writer(f).writerow([uid, email, hash_password(pw), gender, role])
+
+        flash("Registered! Your ID: " + uid, "success")
         return redirect(url_for('login'))
+
     return render_template('register.html')
+
 
 @app.route('/login', methods=['GET','POST'])
 def login():
